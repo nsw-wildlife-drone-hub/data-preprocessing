@@ -19,7 +19,7 @@ class DuplicateRemover():
     def remove_duplicates(self, img_dir):
         # iterate through a glob directory and remove duplicates
         # create list of images and labels
-        img_list = glob(img_dir)
+        img_list = img_dir.glob('*.jpg')
         txt_list = [os.path.splitext(img)[0]+'.txt' for img in img_list]
         
         if img_dir in self.lookup_df.img_dir.tolist():

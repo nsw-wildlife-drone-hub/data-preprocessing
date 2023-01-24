@@ -7,7 +7,6 @@ import patoolib
 import os
 import re
 import shutil
-import pathlib
 import json
 import pandas as pd
 import numpy as np
@@ -16,16 +15,17 @@ import PIL
 from multiprocessing.pool import Pool
 from datetime import datetime
 from glob import glob
+from pathlib import Path
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser()
-    parser.add_argument('detect_table_path', help='Path to detection table data')
-    parser.add_argument('data_path', help='Path to general data')
-    parser.add_argument('training_data_path', help='Path to training data')
-    parser.add_argument('duplicate_data_path', help='Path to duplicate data')
-    parser.add_argument('-output', default='labels.json' help='Name for output COCO file')
-    parser.add_argument('-output_csv', default='labels.csv' help='Name for output csv file')
+    parser.add_argument('detect_table_path', type=Path, help='Path to detection table data')
+    parser.add_argument('data_path', type=Path,help='Path to general data')
+    parser.add_argument('training_data_path', type=Path, help='Path to training data')
+    parser.add_argument('duplicate_data_path', type=Path, help='Path to duplicate data')
+    parser.add_argument('-output', default='labels.json', help='Name for output COCO file')
+    parser.add_argument('-output_csv', default='labels.csv', help='Name for output csv file')
     args = parser.parse_args()
 
     logging.info('Detection path: ', args.detect_table_path)
@@ -44,8 +44,8 @@ def load_data(args):
     detect_df = detect_df[[Config.vid_col, Config.name_col]]
     detect_df = detect_df.drop_duplicates()
     detect_df[detect_df[Config.vid_col].str.endswith('.MP4')]
-    detect_df[Config.zip_col] = Config.data_path + detect_df[Config.name_col] + '.zip'
-    zips = glob(Config.data_path+'*')
+    detect_df[Config.zip_col] = args.data_path / detect_df[Config.name_col] + '.zip'
+    zips = args.data_path.glob()
     detect_df = detect_df[detect_df[Config.zip_col].isin(zips)]
     
     logging.info('Selecting SRT data.')
@@ -53,34 +53,33 @@ def load_data(args):
     detect_df[Config.srt_col] = detect_df[Config.vid_col].apply(pp.convert_srt)
     if Config.MAX_ARCHIVE:
         detect_df = detect_df.head(min(len(detect_df), 1))
-    
+            
+    return detect_df
+
+def build_data(detect_df, args):
     logging.info('List of folders to extract')    
     logging.info(detect_df[Config.name_col])
     logging.info('Extracting data.')
         
     count = 0
     for folder, zip_file in zip(detect_df[Config.name_col], detect_df[Config.zip_col]):
-        tmp_dir = os.path.join('tmp/', folder+'.zip')
         try: 
             logging.info('Extracting {folder}.')
-            shutil.copy(zip_file, tmp_dir)
-            patoolib.extract_archive(tmp_dir, outdir='data/')
-            os.remove(tmp_dir)
+            patoolib.extract_archive(zip_file, outdir=args.data_path)
             count += 1
         except Exception as e:
-            logging.info(f'Skipping {tmp_dir}')
+            logging.info(f'Skipping {folder}')
 
     logging.info(f'Successfully extracted {count} archives')
-    for folder in glob('data/*'):
-        if len(glob(folder+'/*.jpg')) != len(glob(folder+'/*.txt')):
+    for folder in argparse.glob('*'):
+        if len(folder.glob('/*.jpg')) != len(folder.glob('/*.txt')):
             logging.warning(f'{folder} has an irregular number of files')
-            logging.info('\tjpg count: ',len(glob(folder+'/*.jpg')))
-            logging.info('\ttxt count: ',len(glob(folder+'/*.txt')))
-            
-    return detect_df
+            logging.info('\tjpg count: ',len(folder.glob('/*.jpg')))
+            logging.info('\ttxt count: ',len(folder.glob('/*.txt')))
+
 
 def reduce_data_similarity(detect_df, args):
-    img_dir_list = ['/content/data/'+name+'/*.jpg' for name in detect_df[Config.name_col]]
+    img_dir_list = [args.data_path / name for name in detect_df[Config.name_col]]
     if Config.NEW_LOOKUP:
         lookup_df = pd.DataFrame(columns=['img_dir', 'dup_list'])
     else:
@@ -100,7 +99,7 @@ def create_coco(detect_df, args):
                 folder_col_name=Config.name_col, 
                 drop_cols=['color_md'])
     srt_df = SR.make_df()
-    label_df = pp.yolo_to_df('data/')
+    label_df = pp.yolo_to_df(args.data_path)
         
     logging.info('Merging SRT and yolo data.')
     join_key = [Config.name_col, 'frame']
@@ -125,22 +124,26 @@ def create_coco(detect_df, args):
         label_srt_df.to_csv(args.output_csv)
     
 def save_data(args):
-    exts = {x[-4:] for x in glob('data/*/*')}
+    exts = {x[-4:] for x in args.data_path.glob('*/*')}
     exts.remove('.jpg', '.txt')
 
     for ext in exts:
-        non_labels = glob('data/*/*'+ext)
+        non_labels = args.data_path.glob('*/*'(ext))
         print('Removing', len(non_labels), ext, 'files')
         for non_label in non_labels:
             os.remove(non_label)
     
     if Config.ZIP_DATA:
         shutil.make_archive(Config.data_name, 'zip', 'data') 
+        
 def main():
     args = parse_args()
     
     logging.info('Loading data.')
     detect_df = load_data(args)
+    
+    logging.info('Building data.')
+    build_data(detect_df, args)
     
     logging.info('Reducing data similarity.')
     reduce_data_similarity(detect_df, args)

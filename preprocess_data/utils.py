@@ -5,9 +5,7 @@ import pandas as pd
 from datetime import datetime
 
 def start_logging(name='logfile', folder='logs/'):
-    
     pathlib.Path(folder).mkdir(exist_ok=True)
-    
     format = f'%(asctime)s - {name} - %(levelname)s - %(message)s'
     log_name = datetime.now().strftime(f'{folder}{name}_%Y%m%d_%H_%M.log')
     
