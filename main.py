@@ -62,8 +62,9 @@ def build_data(detect_df, args):
     logging.info(', '.join(detect_df[Config.name_col].values))    
     logging.info('Extracting data.')
         
+    Path(args.data_path).mkdir(exist_ok=True)
+        
     count = 0
-
     for folder, zip_file in zip(detect_df[Config.name_col], detect_df[Config.zip_col]):
         try: 
             logging.info(f'Extracting {zip_file}.')
