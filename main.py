@@ -21,7 +21,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser()
     parser.add_argument('detect_table_path', type=Path, help='Path to detection table data')
-    parser.add_argument('data_path', type=Path,help='Path to general data')
+    parser.add_argument('source_path', type=Path,help='Path to all available data')
+    parser.add_argument('data_path', type=Path,help='Path to working directory data')
     parser.add_argument('training_data_path', type=Path, help='Path to training data')
     parser.add_argument('duplicate_data_path', type=Path, help='Path to duplicate data')
     parser.add_argument('-output', default='labels.json', help='Name for output COCO file')
@@ -43,9 +44,9 @@ def load_data(args):
     detect_df = detect_df[(detect_df[Config.ai_col]) & (detect_df[Config.vid_col]) & (detect_df[Config.specie_col]=='koala')]
     detect_df = detect_df[[Config.vid_col, Config.name_col]]
     detect_df = detect_df.drop_duplicates()
-    detect_df[detect_df[Config.vid_col].str.endswith('.MP4')]
-    detect_df[Config.zip_col] = args.data_path / detect_df[Config.name_col] + '.zip'
-    zips = args.data_path.glob()
+    detect_df = detect_df[detect_df[Config.vid_col].str.endswith('.MP4')]
+    detect_df[Config.zip_col] = args.source_path / detect_df[Config.name_col] + '.zip'
+    zips = args.source_path.glob()
     detect_df = detect_df[detect_df[Config.zip_col].isin(zips)]
     
     logging.info('Selecting SRT data.')
