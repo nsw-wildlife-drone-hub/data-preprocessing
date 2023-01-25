@@ -62,7 +62,7 @@ def build_data(detect_df, args):
     logging.info(', '.join(detect_df[Config.name_col].values))    
     logging.info('Extracting data.')
         
-    Path(args.data_path).mkdir(exist_ok=True)
+    args.data_path.mkdir(exist_ok=True)
         
     count = 0
     for folder, zip_file in zip(detect_df[Config.name_col], detect_df[Config.zip_col]):
@@ -87,7 +87,8 @@ def reduce_data_similarity(detect_df, args):
         DR.remove_duplicates(img_dir)
     
     logging.info(f'Overwriting duplicate lookup table at {args.duplicate_data_path}')
-    DR.lookup_df.to_csv(args.duplicate_data_path, index=False)
+    if Config.NEW_LOOKUP:
+        DR.lookup_df.to_csv(args.duplicate_data_path, index=False)
      
 def create_coco(detect_df, args):
     logging.info('Extracting SRT.')
@@ -144,7 +145,7 @@ def main():
     detect_df = load_data(args)
     
     logging.info('Building data.')
-    # build_data(detect_df, args)
+    build_data(detect_df, args)
     
     logging.info('Reducing data similarity.')
     reduce_data_similarity(detect_df, args)
