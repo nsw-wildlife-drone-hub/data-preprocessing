@@ -39,7 +39,7 @@ def convert_yolo(x, y, w, h, width, height):
 
     return [X, Y, W, H]
 
-def yolo_to_df(yolo_dir, width, height, name_col, ext='.jpg',):
+def yolo_to_df(yolo_dir, name_col, width, height, ext='.jpg',):
     # function to collect yolo labels and return a dataframe
     clmns = ['class', 'x', 'y', 'w', 'h', 'filename', 'width', 'height', 'frame', name_col]
     classes = [
@@ -54,8 +54,7 @@ def yolo_to_df(yolo_dir, width, height, name_col, ext='.jpg',):
         'horse',
         'fox',
     ]
-
-    myFiles = glob(yolo_dir + '**/*.txt', recursive=True)
+    myFiles = yolo_dir.rglob('*/*.txt')
 
     image_id = 0
     final_df = []
@@ -67,17 +66,17 @@ def yolo_to_df(yolo_dir, width, height, name_col, ext='.jpg',):
                 nums = [float(num) for num in line.split()]
                 try:
                     row.append(classes[int(nums[0])])
-                    row = row + convert_yolo(*nums[1:])
-                    row.append(item[:-4] + ext)
+                    row = row + convert_yolo(*nums[1:], 
+                                             width=width, 
+                                             height=height)
+                    row.append(str(item.with_suffix(ext)))
                     row.append(width)
                     row.append(height)
-                    row.append(int(pathlib.Path(item).stem))
-                    row.append(pathlib.PurePath(item).parent.name)
+                    row.append(int(item.stem))
+                    row.append(item.parent.name)
                     final_df.append(row)
                 except Exception as e:
-                    logging.info(e)
-                    logging.info('Error converting {item[:-4]}{ext}')
-                    logging.info(row)
+                    logging.exception(e)
 
     df = pd.DataFrame(final_df, columns=clmns)
     df = df.drop_duplicates('filename')

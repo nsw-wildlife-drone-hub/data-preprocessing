@@ -50,7 +50,7 @@ class DuplicateRemover():
                     hash_keys[filehash]=idx
                 else:
                     duplicates_list.append((idx,hash_keys[filehash]))
-            logging.info(f'Found {len(duplicates_list)} duplicates in {idx+1} files')
+            logging.info(f'Found {len(duplicates_list)} duplicates.')
 
         return duplicates_list
 

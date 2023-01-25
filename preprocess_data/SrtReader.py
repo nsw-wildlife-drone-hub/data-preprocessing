@@ -20,6 +20,8 @@ class SrtReader():
         # cycle through srt_list and read each file
         self.final_df = pd.DataFrame()
         for folder_name, srt_file in zip(self.folder_list, self.srt_list):
+            if srt_file.startswith('drive/'):
+                srt_file = srt_file.replace('drive/', '/content/drive/')
             srt_df = self.read_srt(srt_file)
 
             # create foldername column
@@ -46,7 +48,7 @@ class SrtReader():
             lines = re.split('\n\n', f.read())
 
         # parse contents to srt conversion
-        contents = [self.extract_content(line, n) for n, line in enumerate(lines) if line]
+        contents = [self.extract_content(line, n) for n, line in enumerate(lines) if len(line) > 250]
         content_df = pd.DataFrame.from_dict(contents)
 
         return content_df
