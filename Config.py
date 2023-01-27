@@ -22,3 +22,7 @@ class Config:
     DOWNLOAD_DATA = False         # download the previously uploaded data                              
     GENERATE_CSV = True           # include a user-friendly csv file for labels
     NEW_LOOKUP = False            # delete old values and create a new lookup table
+    
+    # coco fields
+    columns = ['class', 'x', 'y', 'w', 'h', 'filename', 'width', 'height', 'frame', name_col]
+    classes = ['koala','glider','bird','macropod','pig','deer','rabbit','bandicoot','horse','fox']

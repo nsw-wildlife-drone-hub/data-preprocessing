@@ -2,12 +2,28 @@ import pandas as pd
 
 class DF2Coco():
     def __init__(self, version='', date_created='', year=''):
+        """
+        Initialize the DF2Coco object.
+
+        Args:
+        version (str): version of the dataset.
+        date_created (str): date when the dataset is created.
+        year (str): year when the dataset is created.
+        """
         self.year = year
         self.version = version
         self.date_created = date_created
 
     def convert_df(self, data_input):
-        # function to convert dataframe of labels to coco format
+        """
+        Convert dataframe of labels to COCO format
+        
+        Parameters:
+        data_input: dataframe of labels, containing columns 'filename', 'class', 'xmin', 'ymin', 'xmax', 'ymax'
+        
+        Returns:
+        data_coco: COCO format data, containing keys 'images', 'categories', 'annotations', and 'info'
+        """
         data = data_input.copy()
         data['fileid'] = data['filename'].astype('category').cat.codes
         data['categoryid'] = pd.Categorical(data['class'], ordered=True).codes + 1
@@ -30,6 +46,9 @@ class DF2Coco():
         return data_coco
 
     def _gen_image(self, row):
+        """
+        Match row fields to a dictionary field for image
+        """
         # populate image info
         image = {
             'height': row.height,
@@ -45,9 +64,13 @@ class DF2Coco():
             'roll': row.Roll,
             'timestamp': row.timestamp,
         }
+        
         return image
 
     def _gen_category(self, row):
+        """
+        Match row fields to a dictionary field for category
+        """
         category = {
             'supercategory': 'Animals',
              'id': row.categoryid - 1,                           
@@ -57,6 +80,9 @@ class DF2Coco():
         return category
 
     def _gen_annotation(self, row):
+        """
+        Match row fields to a dictionary field for annotation
+        """
         area = row.w * row.h
         annotation = {
             'segmentation': [],
@@ -71,6 +97,9 @@ class DF2Coco():
         return annotation
 
     def _gen_info(self):
+        """
+        Match row fields to a dictionary field for info
+        """
         info = {
             'year': self.year,
             'version': self.version,

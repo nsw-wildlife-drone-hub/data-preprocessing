@@ -1,14 +1,22 @@
 from glob import glob
 import pathlib
 import logging
-import pandas as pd
 from datetime import datetime
 
 def start_logging(name='logfile', folder='logs/'):
+    """
+    Start logging to a file and the console.
+
+    Parameters:
+    name (str) : The name of the log file (default: 'logfile').
+    folder (str) : The folder to save the log file in (default: 'logs/').
+    """
+    # create logging folder
     pathlib.Path(folder).mkdir(exist_ok=True)
+    
+    # initialize logging config
     format = f'%(asctime)s - {name} - %(levelname)s - %(message)s'
     log_name = datetime.now().strftime(f'{folder}{name}_%Y%m%d_%H_%M.log')
-    
     logging.basicConfig(
         level=logging.INFO,
         format=format,
@@ -20,6 +28,15 @@ def start_logging(name='logfile', folder='logs/'):
 
 
 def convert_srt(video_path):
+    """
+    Converts a video file path to its corresponding srt file path.
+
+    Parameters:
+    video_path (str or list) : path or list of paths of the video files.
+
+    Returns:
+    srt_path (str or list) : path or list of paths of the srt files the video files.
+    """
     # function to fetch .SRT file based on video file path
     srt_path = None
     if type(video_path) is str:
@@ -30,55 +47,3 @@ def convert_srt(video_path):
     return srt_path
 
 
-def convert_yolo(x, y, w, h, width, height):
-    # function to convert yolo to coco format
-    X = round((x - w/2) * width, 1)
-    Y = round((y - h/2) * height, 1)
-    W = round(w * width, 1)
-    H = round(h * height, 1)
-
-    return [X, Y, W, H]
-
-def yolo_to_df(yolo_dir, name_col, width, height, ext='.jpg',):
-    # function to collect yolo labels and return a dataframe
-    clmns = ['class', 'x', 'y', 'w', 'h', 'filename', 'width', 'height', 'frame', name_col]
-    classes = [
-        'koala',
-        'glider',
-        'bird',
-        'macropod',
-        'pig',
-        'deer',
-        'rabbit',
-        'bandicoot',
-        'horse',
-        'fox',
-    ]
-    myFiles = yolo_dir.rglob('*/*.txt')
-
-    image_id = 0
-    final_df = []
-    for item in myFiles:
-        image_id += 1
-        with open(item, 'rt') as fd:
-            for line in fd.readlines():
-                row = []
-                nums = [float(num) for num in line.split()]
-                try:
-                    row.append(classes[int(nums[0])])
-                    row = row + convert_yolo(*nums[1:], 
-                                             width=width, 
-                                             height=height)
-                    row.append(str(item.with_suffix(ext)))
-                    row.append(width)
-                    row.append(height)
-                    row.append(int(item.stem))
-                    row.append(item.parent.name)
-                    final_df.append(row)
-                except Exception as e:
-                    logging.exception(e)
-
-    df = pd.DataFrame(final_df, columns=clmns)
-    df = df.drop_duplicates('filename')
-
-    return df
