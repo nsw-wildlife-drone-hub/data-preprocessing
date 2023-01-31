@@ -11,11 +11,11 @@ from pathlib import Path
 #     def setup_method(self):
 #         self.name = 'logfile'
 #         self.folder = 'logs/'
-    
+
 #     def test_create_log_folder(self):
 #         start_logging(name=self.name, folder=self.folder)
 #         assert os.path.exists(self.folder) == True
-        
+
 #     def test_create_log_file(self):
 #         start_logging(name=self.name, folder=self.folder)
 #         assert len(os.listdir(self.folder)) > 0
@@ -29,18 +29,21 @@ def test_convert_srt():
     video_path = ['/path/to/myvideo1.MP4', '/path/to/myvideo2.MP4']
     expected_output = ['/path/to/myvideo1.SRT', '/path/to/myvideo2.SRT']
     assert convert_srt(video_path) == expected_output
-    
+
     video_path = None
     expected_output = None
     assert convert_srt(video_path) == expected_output
 
 # Create a temporary directory for testing
+
+
 @pytest.fixture
 def tempdir():
     import tempfile
     temp_dir = tempfile.TemporaryDirectory()
     yield temp_dir
     temp_dir.cleanup()
+
 
 def test_Yolo2df(tempdir):
     # Create test YOLO output files
@@ -52,7 +55,8 @@ def test_Yolo2df(tempdir):
     # Initialize the Yolo2df object
     height, width = 480, 640
     classes = ['class1']
-    columns = ['class', 'x', 'y', 'w', 'h', 'filename', 'width', 'height', 'image_id', 'folder']
+    columns = ['class', 'x', 'y', 'w', 'h', 'filename',
+               'width', 'height', 'image_id', 'folder']
     yolo2df = Yolo2df(height, width, classes, columns)
 
     # Convert the YOLO output files to a dataframe
@@ -83,8 +87,9 @@ def test_Yolo2df(tempdir):
 #         test_images = [path1, path2]
 #         remover = DuplicateRemover(pd.DataFrame(columns=['img_dir', 'dup_list']), remove=True)
 #         remover.remove_duplicates(Path(temp_dir))
-        
-#         assert not Path(path1).exists() or not Path(path2).exists() 
+
+#         assert not Path(path1).exists() or not Path(path2).exists()
+
 
 def test_find_duplicates():
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -100,12 +105,13 @@ def test_find_duplicates():
         assert len(duplicates) == 1
         assert duplicates[0] == (1, 0)
 
+
 def test_convert_dhash():
     image = Image.new('L', (10, 10), 255)
     size = 8
     duplicate_remover = DuplicateRemover(pd.DataFrame())
     dhash = duplicate_remover._convert_dhash(image, size)
-    
+
     assert isinstance(dhash, int)
 
 
@@ -114,8 +120,6 @@ def test_get_grays():
     img.putdata([i for i in range(100)])
     d = DuplicateRemover(pd.DataFrame())
     grays = d._get_grays(img, 5, 5)
-    
+
     assert len(grays) == 25
     assert all(isinstance(x, int) for x in grays)
-    
-    
