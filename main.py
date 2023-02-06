@@ -30,7 +30,7 @@ def parse_args():
                         help='Path to working directory data')
     parser.add_argument('-training_data_path', type=Path,
                         help='Path to training data')
-    parser.add_argument('-duplicate_data_path', type=Path,
+    parser.add_argument('-duplicate_data_path', type=Path, default='dup_data.csv',
                         help='Path to duplicate data')
     parser.add_argument('-output', default='labels.json',
                         type=str, help='Name for output COCO file')
@@ -38,6 +38,8 @@ def parse_args():
                         type=str, help='Name for output csv file')
     parser.add_argument('-save_local_data', default=False,
                         type=bool, help='Save a local copy of the data before unzipping')
+    parser.add_argument('-overwrite_local_data', default=False,
+                        type=bool, help='Overwrite local data if it already exists')
     args = parser.parse_args()
 
     logging.info('Detection path: ' + str(args.detect_table_path))
@@ -60,9 +62,8 @@ def load_data(args):
 
     # filter for available AI, Video column and exclusively koala dataset
     detect_df = pd.read_excel(args.detect_table_path)
-    detect_df = detect_df[(detect_df[Config.ai_col]) &
-                          (detect_df[Config.vid_col]) &
-                          (detect_df[Config.specie_col] == 'koala')]
+    detect_df = detect_df[(detect_df[Config.ai_col].notna()) &
+                          (detect_df[Config.vid_col].notna())]
     detect_df = detect_df[[Config.vid_col, Config.name_col]]
     detect_df = detect_df.drop_duplicates()
     detect_df = detect_df[detect_df[Config.vid_col].str.endswith('.MP4')]
@@ -92,7 +93,11 @@ def build_data(detect_df, args):
     logging.info('Extracting data.')
 
     # create the data folder
-    args.data_path.mkdir(exist_ok=True)
+    try:
+        args.data_path.mkdir()
+    except FileExistsError:
+        if not args.overwrite_local_data:
+            return None
 
     # iterate and extract each archive
     count = 0
