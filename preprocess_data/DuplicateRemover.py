@@ -37,7 +37,7 @@ class DuplicateRemover():
         img_list = list(img_dir.glob('*.jpg'))
         txt_list = [os.path.splitext(img)[0]+'.txt' for img in img_list]
         
-        if img_dir in self.lookup_df.img_dir.tolist():
+        if str(img_dir) in self.lookup_df.img_dir.tolist():
             dup_list = self.lookup_df[self.lookup_df.img_dir==img_dir].dup_list.values[0]
             dup_list = eval(dup_list)
             logging.info(f'Found {len(dup_list)} duplicates in {len(img_list)} from lookup table')

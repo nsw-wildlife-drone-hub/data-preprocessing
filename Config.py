@@ -1,6 +1,6 @@
 class Config:
     # versioning
-    version = '0.5'
+    version = '0.6'
     data_name = 'data_v'+version
 
     # dataframe columns
@@ -22,6 +22,7 @@ class Config:
     DOWNLOAD_DATA = False         # download the previously uploaded data
     GENERATE_CSV = True           # include a user-friendly csv file for labels
     NEW_LOOKUP = True            # delete old values and create a new lookup table
+    LOAD_LOOKUP = True
 
     # coco fields
     columns = ['class', 'x', 'y', 'w', 'h', 'filename',

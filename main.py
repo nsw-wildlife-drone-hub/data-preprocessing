@@ -62,7 +62,7 @@ def load_data(args):
 
     # filter for available AI, Video column and exclusively koala dataset
     detect_df = pd.read_excel(args.detect_table_path)
-    detect_df = detect_df[(detect_df[Config.ai_col].notna()) &
+    detect_df = detect_df[(detect_df[Config.ai_col]==True) &
                           (detect_df[Config.vid_col].notna())]
     detect_df = detect_df[[Config.vid_col, Config.name_col]]
     detect_df = detect_df.drop_duplicates()
@@ -88,7 +88,7 @@ def build_data(detect_df, args):
     """
     Extracts data from folders and archives
     """
-    logging.info('List of folders to extract: ')
+    logging.info(f'{len(detect_df)} folders to extract: ')
     logging.info(', '.join(detect_df[Config.name_col].values))
     logging.info('Extracting data.')
 
@@ -113,6 +113,11 @@ def build_data(detect_df, args):
             logging.info(f'Skipping {zip_file}')
 
     logging.info(f'Successfully extracted {count} archives')
+    
+    # remove empty directories
+    for folder in args.data_path.glob('*'):
+        if not any(folder.iterdir()):
+            os.rmdir(folder)
 
 
 def reduce_data_similarity(detect_df, args):
@@ -131,7 +136,7 @@ def reduce_data_similarity(detect_df, args):
 
     # create new lookup table if configured
     lookup_df = pd.DataFrame(columns=['img_dir', 'dup_list'])
-    if not Config.NEW_LOOKUP:
+    if not Config.LOAD_LOOKUP:
         try:
             lookup_df = pd.read_csv(args.duplicate_data_path)
         except Exception as e:
