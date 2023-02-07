@@ -42,7 +42,7 @@ main.py [-h] [-detect_table_path]  \
 Example
 
 ```bash
-python main.py main.py -detect_table_path Detection_Labelling_List.xlsx \
+python main.py -detect_table_path Detection_Labelling_List.xlsx \
     -source_path Data/ \
     -data_path data/ \
     -training_data_path Training_Data/ \
